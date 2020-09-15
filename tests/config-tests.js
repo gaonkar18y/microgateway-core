@@ -19,6 +19,8 @@ const baseConfig = {
   ]
 }
 
+const noProxyFoundMessage = 'No matching proxy found';
+
 var gateway
 var server
 
@@ -104,5 +106,28 @@ describe('test configuration handling', () => {
         })
       })
     })
+
+    describe('noProxyFoundMessage', () => {
+      it('response has custom 404 error message', (done) => {
+        baseConfig.edgemicro.noProxyFoundMessage = noProxyFoundMessage;
+        startGateway(baseConfig, (req, res, next) => {
+          assert.equal('localhost:' + port, req.headers.host)
+          res.end('OK')
+        }, () => {
+          gateway.start((err) => {
+            assert(!err, err)
+            request({
+              method: 'GET',
+              url: 'http://localhost:' + gatewayPort + '/v2'
+            }, (err, r, body) => {
+              body = JSON.parse(body);
+              assert.equal(noProxyFoundMessage, body.message);
+              done();
+            })
+          })
+        })
+      })
+    })
+
   })
 })
